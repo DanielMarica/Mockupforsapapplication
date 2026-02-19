@@ -23,21 +23,26 @@ const STEPS = [
 ];
 
 type AppState = "idle" | "extracting" | "editing" | "done";
+type Props = { forceStep?: AppState };
 
-export default function App() {
+export default function App({ forceStep }: Props) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [appState, setAppState] = useState<AppState>("idle");
-  const [currentStep, setCurrentStep] = useState(1);
-  const [cvData, setCvData] = useState<CVData | null>(null);
+  const [appState, setAppState] = useState<AppState>(forceStep ?? "idle");
+  const [currentStep, setCurrentStep] = useState(
+    forceStep === "idle" || !forceStep ? 1 :
+    forceStep === "extracting" ? 2 :
+    forceStep === "editing" ? 3 : 4
+  );
+  const [cvData, setCvData] = useState<CVData | null>(
+    forceStep === "editing" || forceStep === "done" ? { ...MOCK_CV_DATA } : null
+  );
 
   /* Step 1 → 2 → 3 */
   const handleConvert = () => {
     if (!selectedFile) return;
     setAppState("extracting");
     setCurrentStep(2);
-
     setTimeout(() => {
-      // Simulate extraction → populate with mock data
       setCvData({ ...MOCK_CV_DATA });
       setAppState("editing");
       setCurrentStep(3);
@@ -64,7 +69,6 @@ export default function App() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f2f3f4]">
-      {/* SAP Shell Bar */}
       <SapShellBar />
 
       {/* Breadcrumb */}
@@ -127,8 +131,6 @@ export default function App() {
         {/* Step indicator card */}
         <div className="bg-white rounded border border-[#d9dde3] shadow-sm px-6 py-5">
           <StepIndicator steps={STEPS} currentStep={currentStep} />
-
-          {/* Status message */}
           <div className="mt-4 pt-4 border-t border-[#edeff2] flex items-center justify-center gap-2">
             {appState === "idle" && (
               <p className="text-[#8696a9]" style={{ fontSize: "12px" }}>
@@ -154,10 +156,7 @@ export default function App() {
             {appState === "done" && (
               <div className="flex items-center gap-2">
                 <CheckCircle2 size={14} className="text-[#1a8a4a]" />
-                <p
-                  className="text-[#1a8a4a]"
-                  style={{ fontSize: "12px", fontWeight: 500 }}
-                >
+                <p className="text-[#1a8a4a]" style={{ fontSize: "12px", fontWeight: 500 }}>
                   CV Europass généré avec succès ! Cliquez sur « Télécharger PDF » pour le sauvegarder.
                 </p>
               </div>
@@ -165,7 +164,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* ── STEP 1 & 2 : Upload + preview empty/loading ── */}
+        {/* STEP 1 & 2 */}
         {(appState === "idle" || appState === "extracting") && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <div className="min-h-[500px]">
@@ -177,39 +176,26 @@ export default function App() {
               />
             </div>
             <div className="min-h-[500px]">
-              <PreviewCard
-                isReady={false}
-                isLoading={isConverting}
-                data={null}
-              />
+              <PreviewCard isReady={false} isLoading={isConverting} data={null} />
             </div>
           </div>
         )}
 
-        {/* ── STEP 3 : Edit form + live preview ── */}
+        {/* STEP 3 */}
         {appState === "editing" && cvData && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <div className="min-h-[600px]">
-              <EditCVForm
-                data={cvData}
-                onChange={setCvData}
-                onValidate={handleValidate}
-              />
+              <EditCVForm data={cvData} onChange={setCvData} onValidate={handleValidate} />
             </div>
             <div className="min-h-[600px]">
-              <PreviewCard
-                isReady={false}
-                isLoading={false}
-                data={cvData}
-              />
+              <PreviewCard isReady={false} isLoading={false} data={cvData} />
             </div>
           </div>
         )}
 
-        {/* ── STEP 4 : Done — full preview + download CTA ── */}
+        {/* STEP 4 */}
         {appState === "done" && cvData && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {/* Download panel */}
             <div className="bg-white rounded border border-[#d9dde3] shadow-sm flex flex-col">
               <div className="flex items-center gap-2 px-5 py-3.5 border-b border-[#edeff2]">
                 <div className="w-8 h-8 rounded bg-[#e8f4ee] flex items-center justify-center">
@@ -224,9 +210,7 @@ export default function App() {
                   </p>
                 </div>
               </div>
-
               <div className="flex-1 flex flex-col items-center justify-center gap-6 p-8">
-                {/* Success illustration */}
                 <div className="relative">
                   <div className="w-24 h-28 rounded-xl border-2 border-[#b8d4f8] bg-white shadow-md flex flex-col overflow-hidden">
                     <div className="h-6 bg-[#0064d9] flex items-center justify-center">
@@ -244,7 +228,6 @@ export default function App() {
                     <CheckCircle2 size={18} className="text-white" />
                   </div>
                 </div>
-
                 <div className="text-center">
                   <p className="text-[#1a2633]" style={{ fontSize: "16px", fontWeight: 600 }}>
                     CV Europass généré !
@@ -253,8 +236,6 @@ export default function App() {
                     {cvData.name} · {cvData.title}
                   </p>
                 </div>
-
-                {/* Download options */}
                 <div className="flex flex-col gap-3 w-full max-w-xs">
                   <button
                     onClick={() => alert("Téléchargement PDF en cours...")}
@@ -273,8 +254,6 @@ export default function App() {
                     Télécharger en DOCX
                   </button>
                 </div>
-
-                {/* File info */}
                 <div className="flex items-center gap-4 text-[#8696a9] mt-2">
                   <span style={{ fontSize: "11px" }}>Format : PDF/A-2A</span>
                   <span style={{ fontSize: "11px" }}>·</span>
@@ -282,7 +261,6 @@ export default function App() {
                   <span style={{ fontSize: "11px" }}>·</span>
                   <span style={{ fontSize: "11px" }}>~82 KB</span>
                 </div>
-
                 <button
                   onClick={() => { setAppState("editing"); setCurrentStep(3); }}
                   className="text-[#0064d9] hover:underline transition-colors"
@@ -292,8 +270,6 @@ export default function App() {
                 </button>
               </div>
             </div>
-
-            {/* Final preview */}
             <div className="min-h-[600px]">
               <PreviewCard
                 isReady={true}
@@ -308,22 +284,14 @@ export default function App() {
         {/* Footer */}
         <div className="bg-white rounded border border-[#d9dde3] px-4 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <span className="text-[#8696a9]" style={{ fontSize: "11px" }}>
-              Flexso CV Converter v2.4.1
-            </span>
+            <span className="text-[#8696a9]" style={{ fontSize: "11px" }}>Flexso CV Converter v2.4.1</span>
             <span className="text-[#d9dde3]">|</span>
-            <span className="text-[#8696a9]" style={{ fontSize: "11px" }}>
-              Powered by SAP BTP
-            </span>
+            <span className="text-[#8696a9]" style={{ fontSize: "11px" }}>Powered by SAP BTP</span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-[#8696a9]" style={{ fontSize: "11px" }}>
-              Support: it-support@flexso.com
-            </span>
+            <span className="text-[#8696a9]" style={{ fontSize: "11px" }}>Support: it-support@flexso.com</span>
             <span className="text-[#d9dde3]">|</span>
-            <span className="text-[#8696a9]" style={{ fontSize: "11px" }}>
-              © 2026 Flexso
-            </span>
+            <span className="text-[#8696a9]" style={{ fontSize: "11px" }}>© 2026 Flexso</span>
           </div>
         </div>
       </main>
