@@ -29,7 +29,7 @@ export default function App({ forceStep }: Props) {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [appState, setAppState] = useState<AppState>(forceStep ?? "idle");
   const [currentStep, setCurrentStep] = useState(
-    forceStep === "idle" || !forceStep ? 1 :
+    !forceStep || forceStep === "idle" ? 1 :
     forceStep === "extracting" ? 2 :
     forceStep === "editing" ? 3 : 4
   );
@@ -37,7 +37,6 @@ export default function App({ forceStep }: Props) {
     forceStep === "editing" || forceStep === "done" ? { ...MOCK_CV_DATA } : null
   );
 
-  /* Step 1 → 2 → 3 */
   const handleConvert = () => {
     if (!selectedFile) return;
     setAppState("extracting");
@@ -49,13 +48,11 @@ export default function App({ forceStep }: Props) {
     }, 2500);
   };
 
-  /* Step 3 → 4 */
   const handleValidate = () => {
     setAppState("done");
     setCurrentStep(4);
   };
 
-  /* Reset */
   const handleReset = () => {
     setSelectedFile(null);
     setAppState("idle");
@@ -73,18 +70,12 @@ export default function App({ forceStep }: Props) {
 
       {/* Breadcrumb */}
       <div className="bg-white border-b border-[#d9dde3] px-6 py-1.5 flex items-center gap-1.5">
-        <button
-          className="flex items-center gap-1 text-[#0064d9] hover:underline transition-colors"
-          style={{ fontSize: "12px" }}
-        >
+        <button className="flex items-center gap-1 text-[#0064d9] hover:underline transition-colors" style={{ fontSize: "12px" }}>
           <Home size={12} />
           Accueil
         </button>
         <ChevronRight size={12} className="text-[#8696a9]" />
-        <button
-          className="flex items-center gap-1 text-[#0064d9] hover:underline transition-colors"
-          style={{ fontSize: "12px" }}
-        >
+        <button className="flex items-center gap-1 text-[#0064d9] hover:underline transition-colors" style={{ fontSize: "12px" }}>
           <FileText size={12} />
           Gestion des CV
         </button>
@@ -128,7 +119,7 @@ export default function App({ forceStep }: Props) {
           </div>
         </div>
 
-        {/* Step indicator card */}
+        {/* Step indicator */}
         <div className="bg-white rounded border border-[#d9dde3] shadow-sm px-6 py-5">
           <StepIndicator steps={STEPS} currentStep={currentStep} />
           <div className="mt-4 pt-4 border-t border-[#edeff2] flex items-center justify-center gap-2">
@@ -202,12 +193,8 @@ export default function App({ forceStep }: Props) {
                   <Download size={16} className="text-[#1a8a4a]" />
                 </div>
                 <div>
-                  <h3 className="text-[#1a2633]" style={{ fontSize: "15px", fontWeight: 600 }}>
-                    Téléchargement
-                  </h3>
-                  <p className="text-[#8696a9]" style={{ fontSize: "12px" }}>
-                    Votre CV Europass est prêt
-                  </p>
+                  <h3 className="text-[#1a2633]" style={{ fontSize: "15px", fontWeight: 600 }}>Téléchargement</h3>
+                  <p className="text-[#8696a9]" style={{ fontSize: "12px" }}>Votre CV Europass est prêt</p>
                 </div>
               </div>
               <div className="flex-1 flex flex-col items-center justify-center gap-6 p-8">
@@ -229,12 +216,8 @@ export default function App({ forceStep }: Props) {
                   </div>
                 </div>
                 <div className="text-center">
-                  <p className="text-[#1a2633]" style={{ fontSize: "16px", fontWeight: 600 }}>
-                    CV Europass généré !
-                  </p>
-                  <p className="text-[#5a6a78] mt-1" style={{ fontSize: "13px" }}>
-                    {cvData.name} · {cvData.title}
-                  </p>
+                  <p className="text-[#1a2633]" style={{ fontSize: "16px", fontWeight: 600 }}>CV Europass généré !</p>
+                  <p className="text-[#5a6a78] mt-1" style={{ fontSize: "13px" }}>{cvData.name} · {cvData.title}</p>
                 </div>
                 <div className="flex flex-col gap-3 w-full max-w-xs">
                   <button
